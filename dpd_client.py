@@ -21,20 +21,21 @@ class DPDClient(object):
     # Caches for properties
     _login_service_client = None
     _shipment_service_client = None
+    _depot_data_service_client = None
+    _token = None
 
     def __init__(self, login_wsdl, shipment_service_wsdl,
+                 depot_data_service_wsdl,
                  username, password,
-                 message_language='en_US', lazy=True):
+                 message_language='en_US'):
         self.login_wsdl = login_wsdl
         self.shipment_service_wsdl = shipment_service_wsdl
+        self.depot_data_service_wsdl = depot_data_service_wsdl
 
         self.username = username
         self.password = password
 
         self.message_language = message_language
-
-        if not lazy:
-            self.token = self.get_auth().auth_token
 
     @property
     def login_service_client(self):
@@ -54,6 +55,37 @@ class DPDClient(object):
             self._shipment_service_client = Client(self.shipment_service_wsdl)
         return self._shipment_service_client
 
+    @property
+    def depot_data_service_client(self):
+        """
+        Returns a depot data service client
+        """
+        if self._depot_data_service_client is None:
+            self._depot_data_service_client = Client(
+                self.depot_data_service_wsdl
+            )
+        return self._depot_data_service_client
+
+    @property
+    def token(self):
+        """
+        Returns the authentication token as a soap response
+        """
+        if self._token is None:
+            self._token = self.get_auth()
+        return self._token
+
+    @property
+    def soap_headers(self):
+        """
+        Returns the SOAP headers for requests which use token
+        """
+        return [{
+            'delisId': self.token.delisId,
+            'authToken': self.token.authToken,
+            'messageLanguage': self.message_language,
+        }]
+
     def get_auth(self):
         """
         Creates an authentication token for the committed user
@@ -67,6 +99,36 @@ class DPDClient(object):
         try:
             response = self.login_service_client.service.getAuth(
                 self.username, self.password, self.message_language
+            )
+        except WebFault, exc:
+            raise DPDException(exc.fault, exc.document)
+        else:
+            return response
+
+    def store_orders(self, print_options, shipment_service_data):
+        """
+        Call storeOrders service
+        """
+        self.shipment_service_client.set_options(soapheaders=self.soap_headers)
+        try:
+            response = self.shipment_service_client.service.storeOrders(
+                print_options, shipment_service_data
+            )
+        except WebFault, exc:
+            raise DPDException(exc.fault, exc.document)
+        else:
+            return response
+
+    def get_depot_data(self, country_code=None, depot=None, zip=None):
+        """
+        Call getDepotData service
+        """
+        self.depot_data_service_client.set_options(
+            soapheaders=self.soap_headers
+        )
+        try:
+            response = self.depot_data_service_client.service.getDepotData(
+                country_code, depot, zip
             )
         except WebFault, exc:
             raise DPDException(exc.fault, exc.document)

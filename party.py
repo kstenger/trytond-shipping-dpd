@@ -1,11 +1,11 @@
 # -*- encoding: utf-8 -*-
 """
-    Customizes party address to have address in correct format for DPD API 
+    Customizes party address to have address in correct format for DPD API
 
     :copyright: (c) 2015 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
-from trytond.pool import Pool, PoolMeta
+from trytond.pool import PoolMeta
 
 __all__ = ['Address']
 __metaclass__ = PoolMeta
@@ -27,14 +27,14 @@ class Address:
         address.street = self.street
         address.zipCode = self.zip
         address.city = self.city
-        if self.subdvision:
+        if self.subdivision:
             address.state = self.subdivision.code[3:]
         if self.country:
             address.country = self.country.code
 
-        address.customerNumber = address.party.code
-        address.phone = address.party.phone
-        address.fax = address.party.fax
-        address.email = address.party.email
+        address.customerNumber = self.party.code
+        address.phone = self.party.phone
+        address.fax = self.party.fax
+        address.email = self.party.email
 
         return address
