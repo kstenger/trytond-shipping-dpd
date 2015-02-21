@@ -41,6 +41,10 @@ class Carrier:
     dpd_depot_data_service_wsdl = fields.Char(
         'Depot Data Service URL', states=STATES, depends=['carrier_cost_method']
     )
+    dpd_parcel_shop_finder_service_wsdl = fields.Char(
+        'Parcel Shop Finder Service URL', states=STATES,
+        depends=['carrier_cost_method']
+    )
     dpd_username = fields.Char(
         'Username/DelisID', states=STATES, depends=['carrier_cost_method']
     )
@@ -78,6 +82,8 @@ class Carrier:
                 self.dpd_url + '/services/ShipmentService/V3_2?wsdl'),
             'dpd_depot_data_service_wsdl': (
                 self.dpd_url + '/services/DepotDataService/V1_0?wsdl'),
+            'dpd_parcel_shop_finder_service_wsdl': (
+                self.dpd_url + '/services/DepotDataService/V1_0?wsdl'),
         }
 
     def get_dpd_client(self):
@@ -88,6 +94,7 @@ class Carrier:
             self.dpd_login_service_wsdl,
             self.dpd_shipment_service_wsdl,
             self.dpd_depot_data_service_wsdl,
+            self.dpd_parcel_shop_finder_service_wsdl,
             self.dpd_username,
             self.dpd_password,
             message_language=Transaction().context.get('language', 'en_US')

@@ -31,6 +31,8 @@ class TestClientAPI(unittest.TestCase):
             '/services/ShipmentService/V3_2?wsdl'
         self.depot_data_service_wsdl = self.server + \
             '/services/DepotDataService/V1_0/?wsdl'
+        self.parcel_shop_finder_service_wsdl = self.server + \
+            '/services/ParcelShopFinderService/V3_0?wsdl'
         self.username = os.environ['DPD_USERNAME']
         self.password = os.environ['DPD_PASSWORD']
 
@@ -40,7 +42,7 @@ class TestClientAPI(unittest.TestCase):
         """
         client = DPDClient(
             self.login_service_wsdl, self.shipment_service_wsdl,
-            self.depot_data_service_wsdl,
+            self.depot_data_service_wsdl, self.parcel_shop_finder_service_wsdl,
             self.username, self.password
         )
         result = client.get_auth()
@@ -53,7 +55,7 @@ class TestClientAPI(unittest.TestCase):
         """
         client = DPDClient(
             self.login_service_wsdl, self.shipment_service_wsdl,
-            self.depot_data_service_wsdl,
+            self.depot_data_service_wsdl, self.parcel_shop_finder_service_wsdl,
             self.username, 'not' + self.password
         )
         with self.assertRaises(DPDException):
@@ -66,7 +68,7 @@ class TestClientAPI(unittest.TestCase):
         """
         client = DPDClient(
             self.login_service_wsdl, self.shipment_service_wsdl,
-            self.depot_data_service_wsdl,
+            self.depot_data_service_wsdl, self.parcel_shop_finder_service_wsdl,
             self.username, self.password
         )
         client.get_depot_data(country_code='DE', zip='63741')

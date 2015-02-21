@@ -72,6 +72,8 @@ class TestDPDShipment(unittest.TestCase):
             '/services/ShipmentService/V3_2?wsdl'
         self.dpd_depot_data_service_wsdl = self.dpd_server + \
             '/services/DepotDataService/V1_0/?wsdl'
+        self.dpd_parcel_shop_finder_service_wsdl = self.dpd_server + \
+            '/services/ParcelShopFinderService/V3_0?wsdl'
         self.dpd_username = os.environ['DPD_USERNAME']
         self.dpd_password = os.environ['DPD_PASSWORD']
 
@@ -313,6 +315,8 @@ class TestDPDShipment(unittest.TestCase):
             'dpd_login_service_wsdl': self.dpd_login_service_wsdl,
             'dpd_shipment_service_wsdl': self.dpd_shipment_service_wsdl,
             'dpd_depot_data_service_wsdl': self.dpd_depot_data_service_wsdl,
+            'dpd_parcel_shop_finder_service_wsdl':
+                self.dpd_parcel_shop_finder_service_wsdl,
             'dpd_username': self.dpd_username,
             'dpd_password': self.dpd_password,
             'dpd_depot': '0163',

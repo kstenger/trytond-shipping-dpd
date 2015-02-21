@@ -22,15 +22,17 @@ class DPDClient(object):
     _login_service_client = None
     _shipment_service_client = None
     _depot_data_service_client = None
+    _parcel_shop_finder_client = None
     _token = None
 
     def __init__(self, login_wsdl, shipment_service_wsdl,
-                 depot_data_service_wsdl,
+                 depot_data_service_wsdl, parcel_shop_finder_service_wsdl,
                  username, password,
                  message_language='en_US'):
         self.login_wsdl = login_wsdl
         self.shipment_service_wsdl = shipment_service_wsdl
         self.depot_data_service_wsdl = depot_data_service_wsdl
+        self.parcel_shop_finder_service_wsdl = parcel_shop_finder_service_wsdl
 
         self.username = username
         self.password = password
@@ -65,6 +67,17 @@ class DPDClient(object):
                 self.depot_data_service_wsdl
             )
         return self._depot_data_service_client
+
+    @property
+    def parcel_shop_finder_client(self):
+        """
+        Returns a parcel shop finder client
+        """
+        if self._parcel_shop_finder_client is None:
+            self._parcel_shop_finder_client = Client(
+                self.parcel_shop_finder_service_wsdl
+            )
+        return self._parcel_shop_finder_client
 
     @property
     def token(self):
