@@ -60,6 +60,21 @@ class ShipmentOut:
             'state', 'is_dpd_shipping'
         ]
     )
+    dpd_customs_terms = fields.Selection(
+        [
+            (None, ''),
+            ('01', 'DAP, cleared'),
+            ('02', 'DDP, delivered duty paid (incl. duties and excl. Taxes'),
+            (
+                '03',
+                'DDP, delivered duty paid (incl duties and taxes) 05 = ex '
+                'works (EXW)'
+            ),
+            ('06', 'DAP'),
+        ], 'DPD customs terms', states={
+            'readonly': Eval('state') == 'done'
+        }, depends=['state']
+    )
 
     @classmethod
     def __setup__(cls):
@@ -78,6 +93,18 @@ class ShipmentOut:
         Check if shipping is from DPD
         """
         return self.carrier and self.carrier.carrier_cost_method == 'dpd'
+
+    @fields.depends('is_dpd_shipping', 'carrier')
+    def on_change_carrier(self):
+        """
+        Show/Hide DPD Tab in view on change of carrier
+        """
+        res = super(ShipmentOut, self).on_change_carrier()
+
+        res['is_dpd_shipping'] = self.carrier and \
+            self.carrier.carrier_cost_method == 'dpd'
+
+        return res
 
     def _get_weight_uom(self):
         """
@@ -129,6 +156,50 @@ class ShipmentOut:
         product_and_service_data.orderType = 'consignment'
         return product_and_service_data
 
+    def _get_dpd_parcel_data(self, dpd_client):
+        """
+        Returns a DPD parcel object
+        """
+        shipment_service_client = dpd_client.shipment_service_client
+
+        parcel_data = shipment_service_client.factory.create(
+            'ns0:parcel'
+        )
+        if self.dpd_product == 'MAIL':
+            # For international
+            parcel_data.international = \
+                self._get_dpd_international_data(dpd_client)
+        return parcel_data
+
+    def _get_dpd_international_data(self, dpd_client):
+        """
+        Returns a DPD international object
+        """
+        shipment_service_client = dpd_client.shipment_service_client
+
+        international_data = shipment_service_client.factory.create(
+            'ns0:international'
+        )
+        value = 0
+        customs_desc = []
+
+        for move in self.outgoing_moves:
+            if move.quantity <= 0:
+                continue
+            value += float(move.product.customs_value_used) * move.quantity
+            customs_desc.append(move.product.name)
+
+        international_data.parcelType = False
+        # DPD expects the customs amount in total without decimal separator
+        # (e.g. 14.00 = 1400)
+        international_data.customsAmount = int(value * 100)
+        international_data.customsCurrency = self.cost_currency.code
+        international_data.customsTerms = self.dpd_customs_terms
+        international_data.customsContent = customs_desc[:35]
+        international_data.commercialInvoiceConsignee = \
+            self.delivery_address.to_dpd_address(shipment_service_client)
+        return international_data
+
     def _get_dpd_print_options(self, dpd_client):
         """
         Returns a DPD printOptions object
@@ -144,18 +215,6 @@ class ShipmentOut:
         print_options.startPosition = 'UPPER_LEFT'
 
         return print_options
-
-    @fields.depends('is_dpd_shipping', 'carrier')
-    def on_change_carrier(self):
-        """
-        Show/Hide DPD Tab in view on change of carrier
-        """
-        res = super(ShipmentOut, self).on_change_carrier()
-
-        res['is_dpd_shipping'] = self.carrier and \
-            self.carrier.carrier_cost_method == 'dpd'
-
-        return res
 
     def make_dpd_labels(self):
         """
@@ -186,6 +245,9 @@ class ShipmentOut:
 
         shipment_service_data.productAndServiceData = \
             self._get_dpd_product_and_service_data(client)
+
+        shipment_service_data.parcels = \
+            self._get_dpd_parcel_data(client)
 
         # XXX: Not sure if parcel is needed here
         try:
