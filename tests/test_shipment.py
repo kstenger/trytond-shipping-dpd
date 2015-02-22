@@ -353,6 +353,8 @@ class TestDPDShipment(unittest.TestCase):
                 'party': party.id,
                 'invoice_address': party.addresses[0].id,
                 'shipment_address': party.addresses[0].id,
+                'dpd_product': 'CL',
+                'carrier': self.carrier.id,
                 'lines': [
                     ('create', [{
                         'type': 'line',
@@ -387,9 +389,6 @@ class TestDPDShipment(unittest.TestCase):
             shipment, = self.StockShipmentOut.search([])
             self.StockShipmentOut.write([shipment], {
                 'code': str(int(time())),
-                'dpd_product': 'CL',
-                'carrier': self.carrier.id,
-                'cost_currency': self.company.currency,
             })
 
             # Before generating labels
@@ -494,7 +493,7 @@ class TestDPDShipment(unittest.TestCase):
                 ], count=True) > 0
             )
 
-    @unittest.skip(' ')
+    @unittest.skip('TODO: Add test for international shipping')
     def test_0030_generate_dpd_international_labels(self):
         """Test case to generate DPD labels for international shipments.
         """

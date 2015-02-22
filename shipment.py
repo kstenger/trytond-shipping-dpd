@@ -41,7 +41,6 @@ class ShipmentOut:
     "Shipment Out"
     __name__ = 'stock.shipment.out'
 
-    # TODO: required if carrier is DPD
     is_dpd_shipping = fields.Function(
         fields.Boolean('Is Shipping', readonly=True),
         'get_is_dpd_shipping'
@@ -84,6 +83,22 @@ class ShipmentOut:
         cls.__rpc__.update({
             'make_dpd_labels': RPC(readonly=False, instantiate=0),
         })
+
+    @staticmethod
+    def default_dpd_customs_terms():
+        Sale = Pool().get('sale.sale')
+
+        sale_id = Transaction().context.get('sale')
+        if sale_id:
+            return Sale(sale_id).dpd_customs_terms
+
+    @staticmethod
+    def default_dpd_product():
+        Sale = Pool().get('sale.sale')
+
+        sale_id = Transaction().context.get('sale')
+        if sale_id:
+            return Sale(sale_id).dpd_product
 
     @staticmethod
     def default_dpd_print_paper_format():
