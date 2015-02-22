@@ -471,6 +471,7 @@ class TestDPDShipment(unittest.TestCase):
 
                 generate_label.dpd_config.dpd_product = 'IE2'
                 generate_label.dpd_config.dpd_print_paper_format = 'A4'
+                generate_label.dpd_config.dpd_customs_terms = None
 
                 result = generate_label.default_generate({})
 

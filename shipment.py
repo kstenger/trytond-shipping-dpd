@@ -72,8 +72,9 @@ class ShipmentOut:
             ),
             ('06', 'DAP'),
         ], 'DPD customs terms', states={
-            'readonly': Eval('state') == 'done'
-        }, depends=['state']
+            'readonly': Eval('state') == 'done',
+            'invisible': Eval('dpd_product') != 'MAIL'
+        }, depends=['state', 'dpd_product']
     )
 
     @classmethod
@@ -298,6 +299,7 @@ class GenerateShippingLabel(Wizard):
         return {
             'dpd_product': shipment.dpd_product,
             'dpd_print_paper_format': shipment.dpd_print_paper_format,
+            'dpd_customs_terms': shipment.dpd_customs_terms,
         }
 
     def transition_next(self):
@@ -312,6 +314,7 @@ class GenerateShippingLabel(Wizard):
 
         if self.start.carrier.carrier_cost_method == 'dpd':
             shipment.dpd_product = self.dpd_config.dpd_product
+            shipment.dpd_customs_terms = self.dpd_config.dpd_customs_terms
             shipment.dpd_print_paper_format = \
                 self.dpd_config.dpd_print_paper_format
 
@@ -330,4 +333,19 @@ class ShippingDPD(ModelView):
             ('A4', 'A4 (parcel label print)'),
             ('A6', 'A6 (parcel label print/direct printing)'),
         ], 'DPD Printer Paper Format', required=True
+    )
+    dpd_customs_terms = fields.Selection(
+        [
+            (None, ''),
+            ('01', 'DAP, cleared'),
+            ('02', 'DDP, delivered duty paid (incl. duties and excl. Taxes'),
+            (
+                '03',
+                'DDP, delivered duty paid (incl duties and taxes) 05 = ex '
+                'works (EXW)'
+            ),
+            ('06', 'DAP'),
+        ], 'DPD customs terms', states={
+            'invisible': Eval('dpd_product') != 'MAIL'
+        }, depends=['dpd_product']
     )

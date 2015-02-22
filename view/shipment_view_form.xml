@@ -6,6 +6,8 @@
             <field name="dpd_product"/>
             <label name="dpd_print_paper_format"/>
             <field name="dpd_print_paper_format"/>
+            <label name="dpd_customs_terms"/>
+            <field name="dpd_customs_terms"/>
         </page>
     </xpath>
 </data>
