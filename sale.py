@@ -58,7 +58,7 @@ class Sale:
             ('06', 'DAP'),
         ], 'DPD customs terms', states={
             'readonly': Eval('state') == 'done',
-            'invisible': Eval('dpd_product') != 'MAIL'
+            'invisible': ~Eval('is_international_shipping')
         }, depends=['state', 'dpd_product']
     )
 

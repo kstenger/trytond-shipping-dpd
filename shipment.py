@@ -72,8 +72,8 @@ class ShipmentOut:
             ('06', 'DAP'),
         ], 'DPD customs terms', states={
             'readonly': Eval('state') == 'done',
-            'invisible': Eval('dpd_product') != 'MAIL'
-        }, depends=['state', 'dpd_product']
+            'invisible': ~Eval('is_international_shipping')
+        }, depends=['state', 'is_international_shipping']
     )
 
     @classmethod
@@ -152,7 +152,9 @@ class ShipmentOut:
         # Weight should be rounded 10Gram units
         general_shipment_data.mpsWeight = int(round(self.package_weight / 10))
 
-        general_shipment_data.sender = self.warehouse.address.to_dpd_address(
+        from_address = self._get_ship_from_address()
+
+        general_shipment_data.sender = from_address.to_dpd_address(
             shipment_service_client
         )
         general_shipment_data.recipient = self.delivery_address.to_dpd_address(
@@ -181,7 +183,7 @@ class ShipmentOut:
         parcel_data = shipment_service_client.factory.create(
             'ns0:parcel'
         )
-        if self.dpd_product == 'MAIL':
+        if self.is_international_shipping:
             # For international
             parcel_data.international = \
                 self._get_dpd_international_data(dpd_client)
@@ -315,6 +317,7 @@ class GenerateShippingLabel(Wizard):
             'dpd_product': shipment.dpd_product,
             'dpd_print_paper_format': shipment.dpd_print_paper_format,
             'dpd_customs_terms': shipment.dpd_customs_terms,
+            'is_international_shipping': shipment.is_international_shipping,
         }
 
     def transition_next(self):
@@ -349,6 +352,7 @@ class ShippingDPD(ModelView):
             ('A6', 'A6 (parcel label print/direct printing)'),
         ], 'DPD Printer Paper Format', required=True
     )
+    is_international_shipping = fields.Boolean("Is International Shipping")
     dpd_customs_terms = fields.Selection(
         [
             (None, ''),
@@ -361,6 +365,6 @@ class ShippingDPD(ModelView):
             ),
             ('06', 'DAP'),
         ], 'DPD customs terms', states={
-            'invisible': Eval('dpd_product') != 'MAIL'
-        }, depends=['dpd_product']
+            'invisible': ~Eval('is_international_shipping')
+        }, depends=['is_international_shipping']
     )
