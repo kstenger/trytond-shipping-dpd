@@ -72,7 +72,8 @@ class ShipmentOut:
             ('06', 'DAP'),
         ], 'DPD customs terms', states={
             'readonly': Eval('state') == 'done',
-            'invisible': ~Eval('is_international_shipping')
+            'invisible': ~Eval('is_international_shipping'),
+            'required': Bool(Eval('is_international_shipping')),
         }, depends=['state', 'is_international_shipping']
     )
 

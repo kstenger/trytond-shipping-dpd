@@ -125,7 +125,7 @@ class Carrier:
         Company = Pool().get('company.company')
 
         if self.carrier_cost_method != 'dpd':
-            return super(Carrier, self).get_sale_price()
+            return super(Carrier, self).get_sale_price()  # pragma: no cover
 
         currency, = Currency.search([('code', '=', 'USD')])
         company = Transaction().context.get('company')
@@ -155,9 +155,3 @@ class TestConnection(Wizard):
             Button('Ok', 'end', 'tryton-ok'),
         ]
     )
-
-    def default_start(self, data):
-        """Test the connection and show the user appropriate message
-        :param data: Wizard data
-        """
-        return {}

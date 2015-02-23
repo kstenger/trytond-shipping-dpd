@@ -66,14 +66,6 @@ class TestDPDShipment(unittest.TestCase):
         self.dpd_server = os.environ.get(
             'DPD_SERVER', 'https://public-ws-stage.dpd.com'
         )
-        self.dpd_login_service_wsdl = self.dpd_server + \
-            '/services/LoginService/V2_0?wsdl'
-        self.dpd_shipment_service_wsdl = self.dpd_server + \
-            '/services/ShipmentService/V3_2?wsdl'
-        self.dpd_depot_data_service_wsdl = self.dpd_server + \
-            '/services/DepotDataService/V1_0/?wsdl'
-        self.dpd_parcel_shop_finder_service_wsdl = self.dpd_server + \
-            '/services/ParcelShopFinderService/V3_0?wsdl'
         self.dpd_username = os.environ['DPD_USERNAME']
         self.dpd_password = os.environ['DPD_PASSWORD']
 
@@ -198,6 +190,18 @@ class TestDPDShipment(unittest.TestCase):
             'code': 'US',
         }])
 
+        country_in, = self.Country.create([{
+            'name': 'India',
+            'code': 'IN',
+        }])
+
+        subdivision_delhi, = self.CountrySubdivision.create([{
+            'name': 'Delhi',
+            'code': 'IN-DL',
+            'country': country_in.id,
+            'type': 'state'
+        }])
+
         subdivision_florida, = self.CountrySubdivision.create([{
             'name': 'Florida',
             'code': 'US-FL',
@@ -307,22 +311,20 @@ class TestDPDShipment(unittest.TestCase):
             'name': 'Test Party',
         }])
 
-        self.carrier, = self.Carrier.create([{
+        values = {
             'party': carrier_party.id,
             'carrier_product': carrier_product.id,
             'carrier_cost_method': 'dpd',
             'dpd_url': self.dpd_server,
-            'dpd_login_service_wsdl': self.dpd_login_service_wsdl,
-            'dpd_shipment_service_wsdl': self.dpd_shipment_service_wsdl,
-            'dpd_depot_data_service_wsdl': self.dpd_depot_data_service_wsdl,
-            'dpd_parcel_shop_finder_service_wsdl':
-                self.dpd_parcel_shop_finder_service_wsdl,
             'dpd_username': self.dpd_username,
             'dpd_password': self.dpd_password,
             'dpd_depot': '0163',
-        }])
+        }
+        values.update(self.Carrier(**values).on_change_dpd_url())
 
-        self.sale_party, = self.Party.create([{
+        self.carrier, = self.Carrier.create([values])
+
+        self.sale_party, self.sale_party2 = self.Party.create([{
             'name': 'Test Sale Party',
             'vat_number': '123456',
             'addresses': [('create', [{
@@ -333,11 +335,26 @@ class TestDPDShipment(unittest.TestCase):
                 'country': country_us.id,
                 'subdivision': subdivision_florida.id,
             }])]
-        }])
+        }, {
+                'name': 'Test Sale Party2',
+                'vat_number': '123456',
+                'addresses': [('create', [{
+                    'name': 'John Wick',
+                    'street': '24, Kasturba Gandhi Marg',
+                    'zip': '110001',
+                    'city': 'New Delhi',
+                    'country': country_in.id,
+                    'subdivision': subdivision_delhi.id,
+                }])]
+            }])
         self.PartyContact.create([{
             'type': 'phone',
             'value': '8005763279',
             'party': self.sale_party.id
+        }, {
+            'type': 'phone',
+            'value': '8005763279',
+            'party': self.sale_party2.id
         }])
 
     def create_sale(self, party):
@@ -354,6 +371,7 @@ class TestDPDShipment(unittest.TestCase):
                 'invoice_address': party.addresses[0].id,
                 'shipment_address': party.addresses[0].id,
                 'dpd_product': 'CL',
+                'dpd_customs_terms': '01',
                 'carrier': self.carrier.id,
                 'lines': [
                     ('create', [{
@@ -366,6 +384,9 @@ class TestDPDShipment(unittest.TestCase):
                     }]),
                 ]
             }])
+            self.assertTrue(
+                self.Sale(sale.id).on_change_carrier()['is_dpd_shipping']
+            )
 
             self.StockLocation.write([sale.warehouse], {
                 'address': self.company.party.addresses[0].id,
@@ -384,9 +405,15 @@ class TestDPDShipment(unittest.TestCase):
 
             # Call method to create sale order
             self.setup_defaults()
+            self.Carrier.test_dpd_credentials([self.carrier])
             self.create_sale(self.sale_party)
 
             shipment, = self.StockShipmentOut.search([])
+            self.assertTrue(
+                self.StockShipmentOut(shipment.id).on_change_carrier().get(
+                    'is_dpd_shipping'
+                )
+            )
             self.StockShipmentOut.write([shipment], {
                 'code': str(int(time())),
             })
@@ -493,7 +520,6 @@ class TestDPDShipment(unittest.TestCase):
                 ], count=True) > 0
             )
 
-    @unittest.skip('TODO: Add test for international shipping')
     def test_0030_generate_dpd_international_labels(self):
         """Test case to generate DPD labels for international shipments.
         """
@@ -501,14 +527,12 @@ class TestDPDShipment(unittest.TestCase):
 
             # Call method to create sale order
             self.setup_defaults()
-            self.create_sale(self.sale_party)
+
+            self.create_sale(self.sale_party2)
 
             shipment, = self.StockShipmentOut.search([])
             self.StockShipmentOut.write([shipment], {
                 'code': str(int(time())),
-                'dpd_product': 'MAIL',
-                'carrier': self.carrier.id,
-                'cost_currency': self.company.currency,
             })
 
             # Before generating labels
