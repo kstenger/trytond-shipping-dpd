@@ -6,9 +6,25 @@
     :license: BSD, see LICENSE for more details.
 """
 from trytond.pool import Pool
+from carrier import Carrier, TestConnection, TestConnectionStart
+from party import Address
+from shipment import ShipmentOut, GenerateShippingLabel, ShippingDPD
+from sale import Sale
 
 
 def register():
     Pool.register(
+        Address,
+        Carrier,
+        Sale,
+        ShipmentOut,
+        ShippingDPD,
+        TestConnectionStart,
         module='shipping_dpd', type_='model'
+    )
+
+    Pool.register(
+        TestConnection,
+        GenerateShippingLabel,
+        module='shipping_dpd', type_='wizard'
     )
