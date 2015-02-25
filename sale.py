@@ -7,7 +7,7 @@
 """
 from trytond.pool import PoolMeta
 from trytond.model import fields
-from trytond.pyson import Eval, Bool
+from trytond.pyson import Eval, Bool, And
 
 __all__ = ['Sale']
 __metaclass__ = PoolMeta
@@ -58,7 +58,11 @@ class Sale:
             ('06', 'DAP'),
         ], 'DPD customs terms', states={
             'readonly': Eval('state') == 'done',
-            'invisible': ~Eval('is_international_shipping')
+            'invisible': ~Eval('is_international_shipping'),
+            'required': And(
+                Bool(Eval('is_dpd_shipping')),
+                Bool(Eval('is_international_shipping'))
+            ),
         }, depends=['state', 'dpd_product']
     )
 
