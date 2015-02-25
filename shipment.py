@@ -9,7 +9,7 @@ import base64
 from dpd_client import DPDException
 from trytond.pool import Pool, PoolMeta
 from trytond.model import fields, ModelView
-from trytond.pyson import Eval, Bool
+from trytond.pyson import Eval, Bool, And
 from trytond.rpc import RPC
 from trytond.transaction import Transaction
 from trytond.wizard import Wizard, StateView, Button
@@ -73,8 +73,11 @@ class ShipmentOut:
         ], 'DPD customs terms', states={
             'readonly': Eval('state') == 'done',
             'invisible': ~Eval('is_international_shipping'),
-            'required': Bool(Eval('is_international_shipping')),
-        }, depends=['state', 'is_international_shipping']
+            'required': And(
+                Bool(Eval('is_dpd_shipping')),
+                Bool(Eval('is_international_shipping'))
+            ),
+        }, depends=['state', 'is_international_shipping', 'is_dpd_shipping']
     )
 
     @classmethod
