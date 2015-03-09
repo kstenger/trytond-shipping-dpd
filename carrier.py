@@ -144,7 +144,6 @@ class TestConnectionStart(ModelView):
 class TestConnection(Wizard):
     """
     Test Connection Wizard
-    Test the connection to magento instance(s)
     """
     __name__ = 'shipping_dpd.wizard_test_connection'
 
