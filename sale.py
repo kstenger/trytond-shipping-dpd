@@ -83,3 +83,16 @@ class Sale:
         Check if shipping is from DPD
         """
         return self.carrier and self.carrier.carrier_cost_method == 'dpd'
+
+    def _get_shipment_sale(self, Shipment, key):
+        """
+        Downstream implementation which adds dpd-specific fields to the unsaved
+        Shipment record.
+        """
+        shipment = super(Sale, self)._get_shipment_sale(Shipment, key)
+
+        if Shipment.__name__ == 'stock.shipment.out' and self.is_dpd_shipping:
+            shipment.dpd_customs_terms = self.dpd_customs_terms
+            shipment.dpd_product = self.dpd_product
+
+        return shipment
