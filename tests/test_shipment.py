@@ -336,17 +336,17 @@ class TestDPDShipment(unittest.TestCase):
                 'subdivision': subdivision_florida.id,
             }])]
         }, {
-                'name': 'Test Sale Party2',
-                'vat_number': '123456',
-                'addresses': [('create', [{
-                    'name': 'John Wick',
-                    'street': '24, Kasturba Gandhi Marg',
-                    'zip': '110001',
-                    'city': 'New Delhi',
-                    'country': country_in.id,
-                    'subdivision': subdivision_delhi.id,
-                }])]
-            }])
+            'name': 'Test Sale Party2',
+            'vat_number': '123456',
+            'addresses': [('create', [{
+                'name': 'John Wick',
+                'street': '24, Kasturba Gandhi Marg',
+                'zip': '110001',
+                'city': 'New Delhi',
+                'country': country_in.id,
+                'subdivision': subdivision_delhi.id,
+            }])]
+        }])
         self.PartyContact.create([{
             'type': 'phone',
             'value': '8005763279',
