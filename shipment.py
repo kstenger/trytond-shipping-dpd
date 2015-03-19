@@ -89,22 +89,6 @@ class ShipmentOut:
         })
 
     @staticmethod
-    def default_dpd_customs_terms():
-        Sale = Pool().get('sale.sale')
-
-        sale_id = Transaction().context.get('sale')
-        if sale_id:
-            return Sale(sale_id).dpd_customs_terms
-
-    @staticmethod
-    def default_dpd_product():
-        Sale = Pool().get('sale.sale')
-
-        sale_id = Transaction().context.get('sale')
-        if sale_id:
-            return Sale(sale_id).dpd_product
-
-    @staticmethod
     def default_dpd_print_paper_format():
         return 'A6'
 

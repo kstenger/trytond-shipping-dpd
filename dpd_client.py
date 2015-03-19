@@ -58,7 +58,7 @@ class DPDClient(object):
         return self._shipment_service_client
 
     @property
-    def depot_data_service_client(self):
+    def depot_data_service_client(self):  # pragma: no cover
         """
         Returns a depot data service client
         """
@@ -69,7 +69,7 @@ class DPDClient(object):
         return self._depot_data_service_client
 
     @property
-    def parcel_shop_finder_client(self):
+    def parcel_shop_finder_client(self):  # pragma: no cover
         """
         Returns a parcel shop finder client
         """
@@ -127,7 +127,7 @@ class DPDClient(object):
             response = self.shipment_service_client.service.storeOrders(
                 print_options, shipment_service_data
             )
-        except WebFault, exc:
+        except WebFault, exc:  # pragma: no cover
             raise DPDException(exc.fault, exc.document)
         else:
             return response
