@@ -80,9 +80,14 @@ major_version, minor_version, _ = info.get('version', '0.0.1').split('.', 2)
 major_version = int(major_version)
 minor_version = int(minor_version)
 
-requires = []
+requires = [
+    'suds',
+]
 
-MODULE2PREFIX = {}
+MODULE2PREFIX = {
+    'shipping': 'openlabs',
+    'customs_value': 'openlabs',
+}
 
 MODULE = "shipping_dpd"
 PREFIX = "openlabs"
@@ -113,10 +118,10 @@ setup(
         'trytond.modules.%s.tests' % MODULE,
     ],
     package_data={
-        'trytond.modules.%s' % MODULE: info.get('xml', [])
-        + info.get('translation', [])
-        + ['tryton.cfg', 'locale/*.po', 'tests/*.rst', 'reports/*.odt']
-        + ['view/*.xml'],
+        'trytond.modules.%s' % MODULE: info.get('xml', []) +
+        info.get('translation', []) +
+        ['tryton.cfg', 'locale/*.po', 'tests/*.rst', 'reports/*.odt'] +
+        ['view/*.xml'],
     },
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -129,7 +134,7 @@ setup(
         'Framework :: Tryton',
         'Topic :: Office/Business',
     ],
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     license='GPL-3',
     install_requires=requires,
     zip_safe=False,
