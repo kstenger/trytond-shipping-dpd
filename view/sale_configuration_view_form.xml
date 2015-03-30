@@ -2,6 +2,7 @@
 <data>
     <xpath expr="/form/field[@name='sale_shipment_cost_method']" position="after">
         <newline/>
+        <separator string="DPD Defaults" colspan="4" id="dpd"/>
         <label name="dpd_product"/>
         <field name="dpd_product"/> 
     </xpath>
