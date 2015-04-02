@@ -5,11 +5,11 @@
     :copyright: (c) 2015 by Openlabs Technologies & Consulting (P) Limited
     :license: see LICENSE for more details.
 """
-from trytond.pool import PoolMeta
+from trytond.pool import PoolMeta, Pool
 from trytond.model import fields
 from trytond.pyson import Eval, Bool, And
 
-__all__ = ['Sale']
+__all__ = ['Sale', 'SaleConfiguration']
 __metaclass__ = PoolMeta
 
 STATES = {
@@ -29,6 +29,19 @@ DPD_PRODUCTS = [
     ('PL+', 'DPD PARCELLetterPlus'),
     ('MAIL', 'DPD International Mail'),
 ]
+
+
+class SaleConfiguration:
+    'Sale Configuration'
+    __name__ = 'sale.configuration'
+
+    dpd_product = fields.Selection(
+        DPD_PRODUCTS, 'DPD Product'
+    )
+
+    @staticmethod
+    def default_dpd_product():
+        return 'CL'
 
 
 class Sale:
@@ -65,6 +78,12 @@ class Sale:
             ),
         }, depends=['state', 'dpd_product']
     )
+
+    @staticmethod
+    def default_dpd_product():
+        Config = Pool().get('sale.configuration')
+        config = Config(1)
+        return config.dpd_product
 
     @fields.depends('is_dpd_shipping', 'carrier')
     def on_change_carrier(self):
