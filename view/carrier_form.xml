@@ -18,7 +18,7 @@
           <label name="dpd_username"/>
           <field name="dpd_username"/>
           <label name="dpd_password"/>
-          <field name="dpd_password"/>
+          <field name="dpd_password" widget="password"/>
           <label name="dpd_depot"/>
           <field name="dpd_depot"/>
           <newline/>
