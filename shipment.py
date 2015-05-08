@@ -14,7 +14,7 @@ from trytond.rpc import RPC
 from trytond.transaction import Transaction
 from trytond.wizard import Wizard, StateView, Button
 
-__all__ = ['ShipmentOut', 'GenerateShippingLabel', 'ShippingDPD']
+__all__ = ['ShipmentOut', 'GenerateShippingLabel', 'ShippingDPD', 'Package']
 __metaclass__ = PoolMeta
 
 
@@ -138,7 +138,8 @@ class ShipmentOut:
         general_shipment_data.product = self.dpd_product
 
         # Weight should be rounded 10Gram units
-        general_shipment_data.mpsWeight = int(round(self.package_weight / 10))
+        package_weight = sum([p.package_weight for p in self.packages])
+        general_shipment_data.mpsWeight = int(round(package_weight / 10))
 
         from_address = self._get_ship_from_address()
 
@@ -168,43 +169,19 @@ class ShipmentOut:
         """
         shipment_service_client = dpd_client.shipment_service_client
 
-        parcel_data = shipment_service_client.factory.create(
-            'ns0:parcel'
-        )
-        if self.is_international_shipping:
-            # For international
-            parcel_data.international = \
-                self._get_dpd_international_data(dpd_client)
-        return parcel_data
-
-    def _get_dpd_international_data(self, dpd_client):
-        """
-        Returns a DPD international object
-        """
-        shipment_service_client = dpd_client.shipment_service_client
-
-        international_data = shipment_service_client.factory.create(
-            'ns0:international'
-        )
-        value = 0
-        customs_desc = []
-
-        for move in self.outgoing_moves:
-            if move.quantity <= 0:
-                continue
-            value += float(move.product.customs_value_used) * move.quantity
-            customs_desc.append(move.product.name)
-
-        international_data.parcelType = False
-        # DPD expects the customs amount in total without decimal separator
-        # (e.g. 14.00 = 1400)
-        international_data.customsAmount = int(value * 100)
-        international_data.customsCurrency = self.cost_currency.code
-        international_data.customsTerms = self.dpd_customs_terms
-        international_data.customsContent = customs_desc[:35]
-        international_data.commercialInvoiceConsignee = \
-            self.delivery_address.to_dpd_address(shipment_service_client)
-        return international_data
+        parcels = []
+        for package in self.packages:
+            parcel_data = shipment_service_client.factory.create(
+                'ns0:parcel'
+            )
+            parcel_data.weight = int(round(package.package_weight / 10))
+            parcel_data.customerReferenceNumber1 = package.code
+            if self.is_international_shipping:
+                # For international
+                parcel_data.international = \
+                    package._get_dpd_international_data(dpd_client)
+            parcels.append(parcel_data)
+        return parcels
 
     def _get_dpd_print_options(self, dpd_client):
         """
@@ -239,6 +216,9 @@ class ShipmentOut:
         if self.tracking_number:
             self.raise_user_error('tracking_number_already_present')
 
+        if not self.packages:
+            self.raise_user_error("no_packages", error_args=(self.id,))
+
         client = self.carrier.get_dpd_client()
 
         print_options = self._get_dpd_print_options(client)
@@ -267,14 +247,24 @@ class ShipmentOut:
         if hasattr(shipment_data, 'faults'):
             fault = shipment_data.faults[0]
             self.raise_user_error('%s: %s' % (fault.faultCode, fault.message))
-        tracking_number = shipment_data.parcelInformation[0].parcelLabelNumber
 
+        # DPD provides a different tracking number/parcel label number for
+        # each parcel/package and sends them as response in the order of
+        # which the parcels were sent in request
+        for package, package_info in zip(
+                self.packages, shipment_data.parcelInformation):
+            package.tracking_number = package_info.parcelLabelNumber
+            package.save()
+
+        # Setting the tracking number of first package/parcel on the
+        # shipment record
+        tracking_number = self.packages[0].tracking_number
         self.__class__.write([self], {
             'tracking_number': unicode(tracking_number),
         })
         Attachment.create([{
             'name': "%s_%s.pdf" % (
-                tracking_number,
+                shipment_data.mpsId,
                 shipment_data.identificationNumber
             ),
             'data': buffer(base64.decodestring(
@@ -356,3 +346,37 @@ class ShippingDPD(ModelView):
             'invisible': ~Eval('is_international_shipping')
         }, depends=['is_international_shipping']
     )
+
+
+class Package:
+    __name__ = 'stock.package'
+
+    def _get_dpd_international_data(self, dpd_client):
+        """
+        Returns a DPD international object
+        """
+        shipment_service_client = dpd_client.shipment_service_client
+
+        international_data = shipment_service_client.factory.create(
+            'ns0:international'
+        )
+        value = 0
+        customs_desc = []
+
+        for move in self.moves:
+            if move.quantity <= 0:
+                continue
+            value += float(move.product.customs_value_used) * move.quantity
+            customs_desc.append(move.product.name)
+
+        international_data.parcelType = False
+        # DPD expects the customs amount in total without decimal separator
+        # (e.g. 14.00 = 1400)
+        international_data.customsAmount = int(value * 100)
+        international_data.customsCurrency = self.shipment.cost_currency.code
+        international_data.customsTerms = self.shipment.dpd_customs_terms
+        international_data.customsContent = ', '.join(customs_desc[:35])
+        international_data.commercialInvoiceConsignee = \
+            self.shipment.delivery_address.to_dpd_address(
+                shipment_service_client)
+        return international_data
