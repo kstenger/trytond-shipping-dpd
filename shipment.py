@@ -138,8 +138,7 @@ class ShipmentOut:
         general_shipment_data.product = self.dpd_product
 
         # Weight should be rounded 10Gram units
-        package_weight = sum([p.package_weight for p in self.packages])
-        general_shipment_data.mpsWeight = int(round(package_weight / 10))
+        general_shipment_data.mpsWeight = int(round(self.weight / 10))
 
         from_address = self._get_ship_from_address()
 
@@ -174,7 +173,7 @@ class ShipmentOut:
             parcel_data = shipment_service_client.factory.create(
                 'ns0:parcel'
             )
-            parcel_data.weight = int(round(package.package_weight / 10))
+            parcel_data.weight = int(round(package.weight / 10))
             parcel_data.customerReferenceNumber1 = package.code
             if self.is_international_shipping:
                 # For international
