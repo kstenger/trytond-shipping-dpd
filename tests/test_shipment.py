@@ -4,8 +4,6 @@
 
     Test dpd Integration
 
-    :copyright: (c) 2014-2015 by Openlabs Technologies & Consulting (P) Limited
-    :license: GPLv3, see LICENSE for more details.
 """
 from decimal import Decimal
 from time import time
@@ -314,6 +312,7 @@ class TestDPDShipment(unittest.TestCase):
 
         values = {
             'party': carrier_party.id,
+            'currency': self.company.currency.id,
             'carrier_product': carrier_product.id,
             'carrier_cost_method': 'dpd',
             'dpd_url': self.dpd_server,
