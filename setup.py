@@ -85,7 +85,7 @@ requires = [
 ]
 
 MODULE2PREFIX = {
-    'shipping': 'openlabs',
+    'shipping': 'fio',
     'customs_value': 'openlabs',
 }
 
@@ -127,7 +127,7 @@ setup(
         'Development Status :: 4 - Beta',
         'Environment :: Plugins',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD',
+        'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
