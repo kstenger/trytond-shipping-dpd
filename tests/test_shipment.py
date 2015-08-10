@@ -41,7 +41,6 @@ class TestDPDShipment(unittest.TestCase):
         self.Account = POOL.get('account.account')
         self.Category = POOL.get('product.category')
         self.Carrier = POOL.get('carrier')
-        self.CarrierConfig = POOL.get('carrier.configuration')
         self.Party = POOL.get('party.party')
         self.PartyContact = POOL.get('party.contact_mechanism')
         self.PaymentTerm = POOL.get('account.invoice.payment_term')
