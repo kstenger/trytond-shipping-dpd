@@ -54,6 +54,13 @@ class Carrier:
     )
 
     @classmethod
+    def view_attributes(cls):
+        return super(Carrier, cls).view_attributes() + [
+            ('//group[@id="dpd_config"]', 'states', {
+                'invisible':  Eval('carrier_cost_method') != 'dpd'
+            })]
+
+    @classmethod
     def __setup__(cls):
         super(Carrier, cls).__setup__()
         selection = ('dpd', 'DPD')
@@ -64,25 +71,31 @@ class Carrier:
             'test_dpd_credentials': {},
         })
 
-    @fields.depends('carrier_cost_method', 'dpd_url')
+    @fields.depends(
+        'carrier_cost_method', 'dpd_url', 'dpd_login_service_wsdl',
+        'dpd_shipment_service_wsdl', 'dpd_depot_data_service_wsdl',
+        'dpd_parcel_shop_finder_service_wsdl'
+    )
     def on_change_dpd_url(self):
         """
         Set the login_service and shipment_service URL on change of dpd_url
         """
         if self.carrier_cost_method != 'dpd':
-            return {}
+            return
         if not self.dpd_url:
-            return {}
-        return {
-            'dpd_login_service_wsdl': (
-                self.dpd_url + '/services/LoginService/V2_0?wsdl'),
-            'dpd_shipment_service_wsdl': (
-                self.dpd_url + '/services/ShipmentService/V3_2?wsdl'),
-            'dpd_depot_data_service_wsdl': (
-                self.dpd_url + '/services/DepotDataService/V1_0?wsdl'),
-            'dpd_parcel_shop_finder_service_wsdl': (
-                self.dpd_url + '/services/DepotDataService/V1_0?wsdl'),
-        }
+            return
+        self.dpd_login_service_wsdl = (
+            self.dpd_url + '/services/LoginService/V2_0?wsdl'
+        )
+        self.dpd_shipment_service_wsdl = (
+            self.dpd_url + '/services/ShipmentService/V3_2?wsdl'
+        )
+        self.dpd_depot_data_service_wsdl = (
+            self.dpd_url + '/services/DepotDataService/V1_0?wsdl'
+        )
+        self.dpd_parcel_shop_finder_service_wsdl = (
+            self.dpd_url + '/services/DepotDataService/V1_0?wsdl'
+        )
 
     def get_dpd_client(self):
         """

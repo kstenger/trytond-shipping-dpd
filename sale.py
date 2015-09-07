@@ -77,6 +77,13 @@ class Sale:
         }, depends=['state', 'dpd_product']
     )
 
+    @classmethod
+    def view_attributes(cls):
+        return super(Sale, cls).view_attributes() + [
+            ('//page[@id="dpd"]', 'states', {
+                'invisible':  ~Bool(Eval('is_dpd_shipping'))
+            })]
+
     @staticmethod
     def default_dpd_product():
         Config = Pool().get('sale.configuration')
@@ -88,12 +95,10 @@ class Sale:
         """
         Show/Hide DPD Tab in view on change of carrier
         """
-        res = super(Sale, self).on_change_carrier()
+        super(Sale, self).on_change_carrier()
 
-        res['is_dpd_shipping'] = self.carrier and \
-            self.carrier.carrier_cost_method == 'dpd'
-
-        return res
+        self.is_dpd_shipping = self.carrier and \
+            self.carrier.carrier_cost_method == 'dpd' or None
 
     def get_is_dpd_shipping(self, name):
         """

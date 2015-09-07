@@ -101,12 +101,10 @@ class ShipmentOut:
         """
         Show/Hide DPD Tab in view on change of carrier
         """
-        res = super(ShipmentOut, self).on_change_carrier()
+        super(ShipmentOut, self).on_change_carrier()
 
-        res['is_dpd_shipping'] = self.carrier and \
-            self.carrier.carrier_cost_method == 'dpd'
-
-        return res
+        self.is_dpd_shipping = self.carrier and \
+            self.carrier.carrier_cost_method == 'dpd' or None
 
     def _get_weight_uom(self):
         """
