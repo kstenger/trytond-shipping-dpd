@@ -2,9 +2,7 @@
 <data>
     <xpath expr="/form/field[@name='carrier_cost_method']" position="after">
         <newline/>
-        <group id='dpd_config' string="DPD Configuration"
-            states="{'invisible': Not(Eval('carrier_cost_method') == 'dpd')}"
-            colspan="4">
+        <group id='dpd_config' string="DPD Configuration" colspan="4">
           <label name="dpd_url"/>
           <field name="dpd_url"/>
           <label name="dpd_login_service_wsdl"/>
