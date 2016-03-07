@@ -47,7 +47,7 @@ class Sale:
     __name__ = 'sale.sale'
 
     is_dpd_shipping = fields.Function(
-        fields.Boolean('Is Shipping', readonly=True),
+        fields.Boolean('Is DPD Shipping', readonly=True),
         'get_is_dpd_shipping'
     )
 
